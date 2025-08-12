@@ -94,6 +94,7 @@ The bot will:
 ### Basic Settings
 - `openrouter_model`: The AI model to use (default: "anthropic/claude-3-haiku")
 - `post_on_startup`: Whether to post immediately when the bot starts (default: false)
+- `check_popular_posts_on_startup`: Whether to check for popular posts immediately on startup (default: true)
 - `reply_to_mentions`: Whether to automatically reply to mentions (default: true)
 - `mention_check_interval_minutes`: How often to check for mentions in minutes (default: 5)
 
@@ -165,10 +166,11 @@ The bot can automatically interact with popular posts either from a specific Twi
   "interact_with_popular_posts": true,
   "search_all_users": true,
   "search_keywords": ["AI", "technology", "innovation", "startup", "crypto"],
-  "popular_posts_check_interval_hours": 4,
+  "popular_posts_check_interval_hours": 24,
+  "check_popular_posts_on_startup": true,
   "popular_posts_interaction_types": ["like", "retweet", "reply"],
   "popular_posts_min_likes": 1000,
-  "popular_posts_max_age_hours": 6,
+  "popular_posts_max_age_hours": 24,
   "popular_posts_reply_to_all": true
 }
 ```
@@ -179,23 +181,24 @@ The bot can automatically interact with popular posts either from a specific Twi
   "interact_with_popular_posts": true,
   "search_all_users": true,
   "search_keywords": ["AI", "technology", "innovation", "startup", "crypto"],
-  "popular_posts_check_interval_hours": 4,
+  "popular_posts_check_interval_hours": 24,
+  "check_popular_posts_on_startup": true,
   "popular_posts_interaction_types": ["like"],
   "popular_posts_min_likes": 1000,
-  "popular_posts_max_age_hours": 6,
+  "popular_posts_max_age_hours": 24,
   "popular_posts_reply_to_all": false,
   "popular_posts_reply_chance": 0.3
 }
 ```
 
 The first configuration will:
-- Search for posts containing AI, technology, innovation, startup, or crypto keywords every 4 hours
-- Like, retweet, and **reply to ALL** posts with 1000+ likes from the last 6 hours
+- Search for posts containing AI, technology, innovation, startup, or crypto keywords **every 24 hours** (and on startup)
+- Like, retweet, and **reply to ALL** posts with 1000+ likes from the last 24 hours
 - Generate AI-powered contextual responses for every popular post found
 
 The second configuration will:
-- Search for posts containing the same keywords every 4 hours
-- Like posts with 1000+ likes from the last 6 hours
+- Search for posts containing the same keywords **every 24 hours** (and on startup)
+- Like posts with 1000+ likes from the last 24 hours
 - Reply to only 30% of popular posts (randomly selected)
 
 ## ⚠️ Important Notes for Reply-to-All Feature
@@ -212,8 +215,9 @@ When using `"popular_posts_reply_to_all": true`, the bot will reply to **EVERY**
 ```json
 {
   "popular_posts_min_likes": 5000,
-  "popular_posts_max_age_hours": 12,
-  "popular_posts_check_interval_hours": 12,
+  "popular_posts_max_age_hours": 24,
+  "popular_posts_check_interval_hours": 24,
+  "check_popular_posts_on_startup": true,
   "search_keywords": ["specific", "relevant", "keywords"],
   "popular_posts_reply_to_all": true
 }

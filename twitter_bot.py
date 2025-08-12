@@ -877,6 +877,9 @@ class TwitterBot:
                 log_message += f" and search for popular posts from all users (keywords: {', '.join(keywords)}) every {popular_posts_interval} hours"
             else:
                 log_message += f" and check popular posts from @{target_username} every {popular_posts_interval} hours"
+
+            if self.config.get('check_popular_posts_on_startup', True):
+                log_message += " (including on startup)"
         log_message += "."
         logger.info(log_message)
 
@@ -911,7 +914,7 @@ class TwitterBot:
             self.check_for_replies_to_bot()
 
         # Check popular posts immediately on startup if enabled
-        if interact_with_popular_posts:
+        if interact_with_popular_posts and self.config.get('check_popular_posts_on_startup', True):
             logger.info("Checking popular posts on startup")
             self.check_and_interact_with_popular_posts()
 
