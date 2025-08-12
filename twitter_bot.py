@@ -31,6 +31,7 @@ class TwitterBot:
         """Initialize the Twitter bot with configuration."""
         self.config = self.load_config(config_file)
         self.twitter_api = self.setup_twitter_api()
+        self.username = self.get_username()
         
     def load_config(self, config_file: str) -> dict:
         """Load configuration from JSON file."""
@@ -71,15 +72,26 @@ class TwitterBot:
                 access_token_secret=self.config['twitter_access_token_secret'],
                 wait_on_rate_limit=True
             )
-            
+
             # Test the connection
             client.get_me()
             logger.info("Twitter API connection established successfully")
             return client
-            
+
         except Exception as e:
             logger.error(f"Failed to setup Twitter API: {e}")
             raise
+
+    def get_username(self) -> str:
+        """Get the authenticated user's username."""
+        try:
+            user = self.twitter_api.get_me()
+            username = user.data.username
+            logger.info(f"Authenticated as: @{username}")
+            return username
+        except Exception as e:
+            logger.error(f"Failed to get username: {e}")
+            return "unknown"
     
     def generate_random_statement(self) -> Optional[str]:
         """Generate a random statement using OpenRouter API."""
@@ -142,11 +154,12 @@ class TwitterBot:
     def post_to_twitter(self, text: str) -> bool:
         """Post text to Twitter."""
         try:
+            logger.info(f"Posting tweet as @{self.username}: {text}")
             response = self.twitter_api.create_tweet(text=text)
             logger.info(f"Successfully posted tweet: {text}")
             logger.info(f"Tweet ID: {response.data['id']}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error posting to Twitter: {e}")
             return False
