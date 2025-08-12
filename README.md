@@ -7,7 +7,8 @@ A Python script that automatically posts AI-generated random statements to Twitt
 - 🤖 AI-powered content generation using OpenRouter API
 - 🐦 Automatic posting to Twitter
 - ⏰ Scheduled posting every 24 hours
-- 📝 Variety of prompt types for diverse content
+- 💬 Automatic replies to mentions with random facts
+- 📝 Variety of random fact prompts for diverse content
 - 📊 Comprehensive logging
 - ⚙️ Configurable settings
 
@@ -64,7 +65,9 @@ pip install -r requirements.txt
      "twitter_consumer_secret": "your_twitter_consumer_secret_here",
      "twitter_access_token": "your_twitter_access_token_here",
      "twitter_access_token_secret": "your_twitter_access_token_secret_here",
-     "post_on_startup": false
+     "post_on_startup": false,
+     "reply_to_mentions": true,
+     "mention_check_interval_minutes": 5
    }
    ```
 
@@ -77,6 +80,7 @@ python twitter_bot.py
 The bot will:
 - Start immediately and log its status
 - Post a tweet every 24 hours
+- Check for mentions every 5 minutes and reply with random facts
 - Log all activities to `twitter_bot.log`
 - Continue running until stopped with Ctrl+C
 
@@ -84,6 +88,8 @@ The bot will:
 
 - `openrouter_model`: The AI model to use (default: "anthropic/claude-3-haiku")
 - `post_on_startup`: Whether to post immediately when the bot starts (default: false)
+- `reply_to_mentions`: Whether to automatically reply to mentions (default: true)
+- `mention_check_interval_minutes`: How often to check for mentions in minutes (default: 5)
 
 ## Available OpenRouter Models
 
@@ -95,14 +101,19 @@ You can change the model in `config.json`. Popular options include:
 
 ## Content Types
 
-The bot generates various types of content:
-- Thought-provoking statements about technology
-- Inspiring quotes about creativity
-- Philosophical observations
-- Witty observations about modern life
-- Motivational statements
-- Scientific insights
-- Humorous daily life comments
+The bot generates various types of random facts:
+- Bizarre but true facts about animals
+- Weird historical facts
+- Strange facts about space and the universe
+- Odd facts about the human body
+- Random facts about food and cooking
+- Weird facts about technology and inventions
+- Bizarre facts about nature and weather
+- Random facts about countries and cultures
+- Odd facts about language and words
+- Strange facts about the ocean and marine life
+
+When replying to mentions, the bot provides conversational random facts tailored for responses.
 
 ## Running as a Service
 
