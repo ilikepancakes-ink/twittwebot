@@ -8,6 +8,10 @@ A Python script that automatically posts AI-generated random statements to Twitt
 - 🐦 Automatic posting to Twitter
 - ⏰ Scheduled posting every 24 hours
 - 💬 Automatic replies to mentions with random facts
+- 🔥 Interaction with popular posts from target accounts (like, retweet, reply)
+- 🎯 Configurable popularity thresholds and interaction types
+- 🧵 Conversation thread tracking and contextual replies to replies
+- 🔄 Automatic responses to anyone who replies to the bot's tweets
 - 📝 Variety of random fact prompts for diverse content
 - 📊 Comprehensive logging
 - ⚙️ Configurable settings
@@ -81,15 +85,177 @@ The bot will:
 - Start immediately and log its status
 - Post a tweet every 24 hours
 - Check for mentions every 5 minutes and reply with random facts
+- Interact with popular posts from target accounts (if enabled)
 - Log all activities to `twitter_bot.log`
 - Continue running until stopped with Ctrl+C
 
 ## Configuration Options
 
+### Basic Settings
 - `openrouter_model`: The AI model to use (default: "anthropic/claude-3-haiku")
 - `post_on_startup`: Whether to post immediately when the bot starts (default: false)
 - `reply_to_mentions`: Whether to automatically reply to mentions (default: true)
 - `mention_check_interval_minutes`: How often to check for mentions in minutes (default: 5)
+
+### Popular Posts Interaction Settings
+- `interact_with_popular_posts`: Enable interaction with popular posts (default: false)
+- `search_all_users`: Search for popular posts from all users instead of a specific account (default: false)
+- `target_twitter_username`: Username of the account to monitor for popular posts (e.g., "elonmusk") - only used when `search_all_users` is false
+- `search_keywords`: List of keywords to search for when `search_all_users` is true (default: ["trending", "viral", "popular"])
+- `popular_posts_check_interval_hours`: How often to check for popular posts in hours (default: 6)
+- `popular_posts_interaction_types`: Types of interactions to perform (default: ["like", "retweet"])
+  - Available options: "like", "retweet", "reply"
+- `popular_posts_min_likes`: Minimum number of likes for a post to be considered popular (default: 1000)
+- `popular_posts_max_age_hours`: Maximum age of posts to consider in hours (default: 24)
+- `popular_posts_reply_to_all`: Reply to ALL popular posts found (overrides reply_chance when true, default: false)
+- `popular_posts_reply_chance`: Probability of replying to a popular post when reply_to_all is false (0.0-1.0, default: 0.3)
+
+### Conversation Thread Settings
+- `track_reply_chains`: Track conversation threads for contextual responses (default: false)
+- `reply_to_replies`: Automatically respond to anyone who replies to the bot's tweets (default: false)
+- `max_reply_chain_depth`: Maximum number of bot replies allowed in a single conversation thread (default: 5)
+
+## Popular Posts Interaction
+
+The bot can automatically interact with popular posts either from a specific Twitter account or from all users based on keywords. Here's how it works:
+
+### Two Search Modes:
+
+#### 1. Specific User Mode (`search_all_users`: false)
+- **Monitoring**: The bot periodically checks the target account for recent posts
+- **Filtering**: Posts are filtered based on popularity and age criteria
+- **Best for**: Following specific influencers or accounts
+
+#### 2. All Users Mode (`search_all_users`: true)
+- **Searching**: The bot searches Twitter for posts containing specified keywords
+- **Filtering**: Posts are filtered based on popularity, age, and language (English only)
+- **Best for**: Finding trending content across all of Twitter
+
+### Common Features:
+1. **Filtering**: Posts are filtered based on:
+   - Minimum number of likes (`popular_posts_min_likes`)
+   - Maximum age (`popular_posts_max_age_hours`)
+   - Only original tweets (no retweets or replies)
+2. **Ranking**: Posts are ranked by popularity (like count)
+3. **Interaction**: The bot can perform various interactions:
+   - **Like**: Automatically likes popular posts
+   - **Retweet**: Shares popular posts to your timeline
+   - **Reply**: Generates contextual AI replies to popular posts
+4. **Rate Limiting**: Built-in delays prevent hitting Twitter's rate limits
+
+### Example Configurations
+
+#### For Specific User:
+```json
+{
+  "interact_with_popular_posts": true,
+  "search_all_users": false,
+  "target_twitter_username": "elonmusk",
+  "popular_posts_check_interval_hours": 6,
+  "popular_posts_interaction_types": ["like", "retweet"],
+  "popular_posts_min_likes": 5000,
+  "popular_posts_max_age_hours": 12,
+  "popular_posts_reply_chance": 0.2
+}
+```
+
+#### For All Users (Keyword Search) - Reply to ALL:
+```json
+{
+  "interact_with_popular_posts": true,
+  "search_all_users": true,
+  "search_keywords": ["AI", "technology", "innovation", "startup", "crypto"],
+  "popular_posts_check_interval_hours": 4,
+  "popular_posts_interaction_types": ["like", "retweet", "reply"],
+  "popular_posts_min_likes": 1000,
+  "popular_posts_max_age_hours": 6,
+  "popular_posts_reply_to_all": true
+}
+```
+
+#### For All Users (Keyword Search) - Chance-based Replies:
+```json
+{
+  "interact_with_popular_posts": true,
+  "search_all_users": true,
+  "search_keywords": ["AI", "technology", "innovation", "startup", "crypto"],
+  "popular_posts_check_interval_hours": 4,
+  "popular_posts_interaction_types": ["like"],
+  "popular_posts_min_likes": 1000,
+  "popular_posts_max_age_hours": 6,
+  "popular_posts_reply_to_all": false,
+  "popular_posts_reply_chance": 0.3
+}
+```
+
+The first configuration will:
+- Search for posts containing AI, technology, innovation, startup, or crypto keywords every 4 hours
+- Like, retweet, and **reply to ALL** posts with 1000+ likes from the last 6 hours
+- Generate AI-powered contextual responses for every popular post found
+
+The second configuration will:
+- Search for posts containing the same keywords every 4 hours
+- Like posts with 1000+ likes from the last 6 hours
+- Reply to only 30% of popular posts (randomly selected)
+
+## ⚠️ Important Notes for Reply-to-All Feature
+
+When using `"popular_posts_reply_to_all": true`, the bot will reply to **EVERY** popular post it finds. Consider these recommendations:
+
+1. **Start with higher thresholds**: Use higher values for `popular_posts_min_likes` (e.g., 5000+) to limit the number of posts
+2. **Longer intervals**: Use longer `popular_posts_check_interval_hours` (e.g., 12-24 hours) to avoid overwhelming activity
+3. **Monitor rate limits**: Twitter has rate limits for posting - the bot includes delays but monitor your usage
+4. **Quality keywords**: Use specific, relevant keywords to ensure you're replying to posts in your area of interest
+5. **Test first**: Start with `popular_posts_reply_to_all: false` and a low `reply_chance` to test the system
+
+### Recommended Safe Configuration for Reply-to-All:
+```json
+{
+  "popular_posts_min_likes": 5000,
+  "popular_posts_max_age_hours": 12,
+  "popular_posts_check_interval_hours": 12,
+  "search_keywords": ["specific", "relevant", "keywords"],
+  "popular_posts_reply_to_all": true
+}
+```
+
+## 🧵 Conversation Thread Tracking
+
+The bot can track conversation threads and respond contextually to replies. Here's how it works:
+
+### How Conversation Tracking Works:
+1. **Initial Reply**: When the bot replies to a popular post, it stores the conversation context
+2. **Reply Detection**: The bot monitors mentions to detect when someone replies to its tweets
+3. **Context Gathering**: When a reply is detected, the bot gathers the full conversation thread
+4. **Contextual Response**: The bot generates a response considering:
+   - The original post that started the conversation
+   - All previous messages in the thread
+   - The specific reply it's responding to
+5. **Depth Limiting**: Prevents infinite loops with `max_reply_chain_depth`
+
+### Example Conversation Flow:
+```
+Original Post: "AI will revolutionize healthcare in the next decade"
+Bot Reply: "Absolutely! AI diagnostics are already showing 95% accuracy rates..."
+User Reply: "What about privacy concerns with medical AI?"
+Bot Response: "Great point! Given the healthcare context we're discussing, privacy is crucial. Medical AI systems need robust encryption and patient consent frameworks..."
+```
+
+### Configuration for Conversation Tracking:
+```json
+{
+  "track_reply_chains": true,
+  "reply_to_replies": true,
+  "max_reply_chain_depth": 5,
+  "popular_posts_reply_to_all": true
+}
+```
+
+This enables:
+- Full conversation context in replies
+- Automatic responses to anyone who engages with the bot
+- Prevention of overly long conversation chains
+- Contextual understanding spanning multiple exchanges
 
 ## Available OpenRouter Models
 
