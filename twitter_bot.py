@@ -264,11 +264,17 @@ class TwitterBot:
         try:
             logger.info("Checking for new mentions...")
 
-            # Get mentions
-            mentions = self.twitter_api.get_mentions(
+            # Get my user ID
+            my_user_id = self.twitter_api.get_me().data.id
+
+            # Get mentions using the correct API method
+            mentions = self.twitter_api.get_users_mentions(
+                id=my_user_id,
                 since_id=self.last_mention_id,
                 max_results=10,
-                tweet_fields=['author_id', 'created_at', 'conversation_id']
+                tweet_fields=['author_id', 'created_at', 'conversation_id'],
+                expansions=['author_id'],
+                user_fields=['username']
             )
 
             if not mentions.data:
@@ -277,9 +283,15 @@ class TwitterBot:
 
             logger.info(f"Found {len(mentions.data)} new mentions")
 
+            # Create user mapping for usernames
+            users_map = {}
+            if mentions.includes and 'users' in mentions.includes:
+                for user in mentions.includes['users']:
+                    users_map[user.id] = user.username
+
             for mention in mentions.data:
                 # Skip our own tweets
-                if str(mention.author_id) == str(self.twitter_api.get_me().data.id):
+                if str(mention.author_id) == str(my_user_id):
                     continue
 
                 logger.info(f"Processing mention from user {mention.author_id}: {mention.text}")
@@ -288,8 +300,7 @@ class TwitterBot:
                 fact = self.generate_random_fact_reply()
                 if fact:
                     # Get the username of the person who mentioned us
-                    user = self.twitter_api.get_user(id=mention.author_id)
-                    username = user.data.username
+                    username = users_map.get(mention.author_id, 'unknown')
 
                     # Create reply with username
                     reply_text = f"@{username} {fact}"
@@ -695,8 +706,12 @@ class TwitterBot:
 
             logger.info("Checking for replies to bot's tweets...")
 
+            # Get my user ID
+            my_user_id = self.twitter_api.get_me().data.id
+
             # Get mentions that might be replies to our tweets
-            mentions = self.twitter_api.get_mentions(
+            mentions = self.twitter_api.get_users_mentions(
+                id=my_user_id,
                 since_id=self.last_mention_id,
                 max_results=100,
                 tweet_fields=['author_id', 'created_at', 'conversation_id', 'in_reply_to_user_id', 'referenced_tweets'],
@@ -708,12 +723,12 @@ class TwitterBot:
                 logger.info("No new mentions found")
                 return
 
-            my_user_id = str(self.twitter_api.get_me().data.id)
+            my_user_id_str = str(my_user_id)
             max_depth = self.config.get('max_reply_chain_depth', 5)
 
             for mention in mentions.data:
                 # Skip our own tweets
-                if str(mention.author_id) == my_user_id:
+                if str(mention.author_id) == my_user_id_str:
                     continue
 
                 # Check if this is a reply to one of our replies
